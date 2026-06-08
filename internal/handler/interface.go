@@ -24,7 +24,7 @@ func NewInterfaceHandler() *InterfaceHandler {
 func (h *InterfaceHandler) List(c *gin.Context) {
 	interfaces := h.store.ListInterfaces()
 	c.JSON(http.StatusOK, gin.H{
-		"count":    len(interfaces),
+		"count":   len(interfaces),
 		"results": interfaces,
 	})
 }

@@ -19,15 +19,15 @@ type Device struct {
 
 // Interface represents a network interface on a device
 type Interface struct {
-	ID       int    `json:"id"`
-	Device   int    `json:"device"`
-	Name     string `json:"name"`
-	Type     string `json:"type"`
-	Status   string `json:"status"`
-	Enabled  bool   `json:"enabled"`
-	MTU      int    `json:"mtu,omitempty"`
-	Mode     string `json:"mode,omitempty"`
-	MACAddr  string `json:"mac_address,omitempty"`
+	ID      int    `json:"id"`
+	Device  int    `json:"device"`
+	Name    string `json:"name"`
+	Type    string `json:"type"`
+	Status  string `json:"status"`
+	Enabled bool   `json:"enabled"`
+	MTU     int    `json:"mtu,omitempty"`
+	Mode    string `json:"mode,omitempty"`
+	MACAddr string `json:"mac_address,omitempty"`
 }
 
 // Site represents a Netbox site

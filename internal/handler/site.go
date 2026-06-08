@@ -24,7 +24,7 @@ func NewSiteHandler() *SiteHandler {
 func (h *SiteHandler) List(c *gin.Context) {
 	sites := h.store.ListSites()
 	c.JSON(http.StatusOK, gin.H{
-		"count":    len(sites),
+		"count":   len(sites),
 		"results": sites,
 	})
 }

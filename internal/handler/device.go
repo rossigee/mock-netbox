@@ -24,7 +24,7 @@ func NewDeviceHandler() *DeviceHandler {
 func (h *DeviceHandler) List(c *gin.Context) {
 	devices := h.store.ListDevices()
 	c.JSON(http.StatusOK, gin.H{
-		"count":    len(devices),
+		"count":   len(devices),
 		"results": devices,
 	})
 }
