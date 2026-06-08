@@ -1,4 +1,4 @@
-version: v1
+version: 1.60.3
 
 run:
   timeout: 5m
@@ -15,9 +15,9 @@ linters:
     - typecheck
     - gofmt
     - goimports
-    - revive
     - misspell
     - gocritic
+    - revive
 
 linters-settings:
   goimports:
