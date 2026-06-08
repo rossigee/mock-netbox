@@ -54,7 +54,7 @@ jobs:
           push: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) }}
           tags: |
             ${{ env.REGISTRY }}/rossigee/mock-netbox:latest
-            ${{ env.REGISTRY }}/mock-netbox:${{ github.sha }}
+            ${{ env.REGISTRY }}/rossigee/mock-netbox:${{ github.sha }}
             ${{ startsWith(github.ref, 'refs/tags/v') && format('{0}/rossigee/mock-netbox:{1}', env.REGISTRY, github.ref_name) || '' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
