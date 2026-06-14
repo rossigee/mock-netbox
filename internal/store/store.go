@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/google/uuid"
@@ -42,22 +43,66 @@ type Site struct {
 	Description string `json:"description,omitempty"`
 }
 
+// Prefix represents an IPAM prefix (subnet)
+type Prefix struct {
+	ID          int    `json:"id"`
+	Prefix      string `json:"prefix"`
+	Description string `json:"description,omitempty"`
+	Site        int    `json:"site,omitempty"`
+	VLAN        int    `json:"vlan,omitempty"`
+	Status      string `json:"status,omitempty"`
+}
+
+// IPAddress represents an IP address in NetBox
+type IPAddress struct {
+	ID          int    `json:"id"`
+	Address     string `json:"address"`
+	Prefix      string `json:"prefix,omitempty"`
+	Device      int    `json:"device,omitempty"`
+	Interface   int    `json:"interface,omitempty"`
+	Status      string `json:"status,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
 // Store manages in-memory data for Netbox mock
 type Store struct {
-	mu         sync.RWMutex
-	devices    map[int]*Device
-	interfaces map[int]*Interface
-	sites      map[int]*Site
-	nextID     int
+	mu          sync.RWMutex
+	devices     map[int]*Device
+	interfaces  map[int]*Interface
+	sites       map[int]*Site
+	prefixes    map[int]*Prefix
+	ipAddresses map[int]*IPAddress
+	nextID      int
 }
 
 // NewStore creates a new store instance
 func NewStore() *Store {
-	return &Store{
-		devices:    make(map[int]*Device),
-		interfaces: make(map[int]*Interface),
-		sites:      make(map[int]*Site),
-		nextID:     1,
+	s := &Store{
+		devices:     make(map[int]*Device),
+		interfaces:  make(map[int]*Interface),
+		sites:       make(map[int]*Site),
+		prefixes:    make(map[int]*Prefix),
+		ipAddresses: make(map[int]*IPAddress),
+		nextID:      1,
+	}
+	// Seed some default prefixes
+	s.seedPrefixes()
+	return s
+}
+
+func (s *Store) seedPrefixes() {
+	s.prefixes[1] = &Prefix{ID: 1, Prefix: "10.0.1.0/24", Description: "Management", Status: "container"}
+	s.prefixes[2] = &Prefix{ID: 2, Prefix: "10.0.2.0/24", Description: "Runners", Status: "container"}
+	s.prefixes[3] = &Prefix{ID: 3, Prefix: "10.0.3.0/24", Description: "golder.lan runners", Status: "container"}
+	s.prefixes[4] = &Prefix{ID: 4, Prefix: "192.168.122.0/24", Description: "Libvirt VMs", Status: "container"}
+	// Seed some available IPs in runner prefix
+	for i := 10; i <= 50; i++ {
+		s.ipAddresses[i] = &IPAddress{
+			ID:      i,
+			Address: fmt.Sprintf("10.0.3.%d/32", i),
+			Prefix:  "10.0.3.0/24",
+			Status:  "available",
+		}
 	}
 }
 
@@ -207,6 +252,79 @@ func (s *Store) DeleteSite(id int) bool {
 	defer s.mu.Unlock()
 	if _, exists := s.sites[id]; exists {
 		delete(s.sites, id)
+		return true
+	}
+	return false
+}
+
+// Prefix operations
+
+// ListPrefixes returns all prefixes
+func (s *Store) ListPrefixes() []*Prefix {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	result := make([]*Prefix, 0, len(s.prefixes))
+	for _, p := range s.prefixes {
+		result = append(result, p)
+	}
+	return result
+}
+
+// GetPrefix retrieves a prefix by ID
+func (s *Store) GetPrefix(id int) *Prefix {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.prefixes[id]
+}
+
+// IPAddress operations
+
+// ListIPAddresses returns all IP addresses
+func (s *Store) ListIPAddresses() []*IPAddress {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	result := make([]*IPAddress, 0, len(s.ipAddresses))
+	for _, ip := range s.ipAddresses {
+		result = append(result, ip)
+	}
+	return result
+}
+
+// GetIPAddress retrieves an IP address by ID
+func (s *Store) GetIPAddress(id int) *IPAddress {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.ipAddresses[id]
+}
+
+// AllocateIP finds an available IP in a prefix and marks it as allocated
+func (s *Store) AllocateIP(prefix string, description string) *IPAddress {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var candidate *IPAddress
+	for _, ip := range s.ipAddresses {
+		if ip.Status == "available" && ip.Prefix == prefix {
+			candidate = ip
+			break
+		}
+	}
+
+	if candidate == nil {
+		return nil
+	}
+
+	candidate.Status = "active"
+	candidate.Description = description
+	return candidate
+}
+
+// ReleaseIP marks an IP as available
+func (s *Store) ReleaseIP(id int) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if ip, exists := s.ipAddresses[id]; exists {
+		ip.Status = "available"
 		return true
 	}
 	return false

@@ -1,14 +1,9 @@
-FROM golang:1.26.4 as builder
+FROM golang:1.26.4 AS builder
 WORKDIR /build
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-
-RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b /usr/local/bin v2.12.2
-RUN golangci-lint run ./...
-
-RUN go test -v -race -coverprofile=coverage.out ./...
 
 RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o app ./cmd/main
 

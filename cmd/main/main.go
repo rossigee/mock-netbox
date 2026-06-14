@@ -80,6 +80,17 @@ func main() {
 		siteAPI.DELETE("/:id", sites.Delete)
 	}
 
+	// IPAM endpoints
+	ipam := router.Group("/api/ipam")
+	{
+		ipam.GET("/prefixes", handler.NewIPAMHandler().ListPrefixes)
+		ipam.GET("/prefixes/:id", handler.NewIPAMHandler().GetPrefix)
+		ipam.GET("/ip-addresses", handler.NewIPAMHandler().ListIPAddresses)
+		ipam.POST("/ip-addresses", handler.NewIPAMHandler().AllocateIP)
+		ipam.GET("/ip-addresses/:id", handler.NewIPAMHandler().GetIPAddress)
+		ipam.DELETE("/ip-addresses/:id", handler.NewIPAMHandler().ReleaseIP)
+	}
+
 	// Start server
 	port := os.Getenv("HTTP_PORT")
 	if port == "" {
